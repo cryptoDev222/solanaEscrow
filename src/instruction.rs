@@ -24,14 +24,26 @@ pub enum EscrowInstruction{
 //6[read-only] the actual token program of whatever you are creating
  
  //amount the first person(initializer) expects of the Token Y for her X
-InitializeEscrow{AmountExpected: u64}
+InitializeEscrow{amount: u64}
 
 //accepts a trade at this point
 //these are the expected accounts
 
+/// Accounts expected:
+///
+/// 0. `[signer]` The account of the person taking the trade
+/// 1. `[writable]` The taker's token account for the token they send 
+/// 2. `[writable]` The taker's token account for the token they will receive should the trade go through
+/// 3. `[writable]` The PDA's temp token account to get tokens from and eventually close
+/// 4. `[writable]` The initializer's main account to send their rent fees to
+/// 5. `[writable]` The initializer's token account that will receive tokens
+/// 6. `[writable]` The escrow account holding the escrow info
+/// 7. `[read only]` The token program
+/// 8. `[read only]` The PDA account
+
 
 // the amount the second person(taker) expects to be paid in the other token, Token X in this case
-Exchange{AmountExpected: u64}
+Exchange{amount: u64}
 
 
 impl EscrowInstruction {
@@ -39,10 +51,15 @@ impl EscrowInstruction {
     pub fn unpack(input: &[u8]) -> Result<Self, ProgramError> {
         let (tag, rest) = input.split_first().ok_or(InvalidInstruction)?;
         Ok(match tag {
-            //match looks at the first byte to figure out how to decode this into
             0 => Self::InitEscrow {
-                amount: Self::unpack_amount(rest)?,},_ => return Err(InvalidInstruction.into()),})
-    }
+                amount: Self::unpack_amount(rest)?,
+            },
+            1 => Self::Exchange {
+                amount: Self::unpack_amount(rest)?
+            },
+            _ => return Err(InvalidInstruction.into()),
+        })
+        
 
     fn unpack_amount(input: &[u8]) -> Result<u64, ProgramError> {
         let amount = input
