@@ -16,6 +16,9 @@ pub enum EscrowError {
     /// Amount Overflow
     #[error("Amount Overflow")]
     AmountOverflow,
+    //Bid is not high enough
+    #[error("This mans is too broke to afford this")]
+    BrokeBoy,
 }
 
 impl From<EscrowError> for ProgramError {

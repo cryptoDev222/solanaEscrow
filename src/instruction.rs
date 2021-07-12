@@ -6,9 +6,6 @@ pub mod entrypoint;
 
 //instruction doesnt actually touch any accounts it just tells you what accounts to expect and where the calling info is
 
-
-
-
 pub enum EscrowInstruction{
 //makes an escrow account and gives ownership to a program derived address
 //program derived address is like a contract address in solidity if you forget
@@ -45,21 +42,21 @@ InitializeEscrow{amount: u64}
 // the amount the second person(taker) expects to be paid in the other token, Token X in this case
 Exchange{amount: u64}
 
+Bid {amount: u64}
+
+}
+
 
 impl EscrowInstruction {
     /// since everything gets encoded, this unpacks a byte buffer into an escrow instruction and the amount
     pub fn unpack(input: &[u8]) -> Result<Self, ProgramError> {
         let (tag, rest) = input.split_first().ok_or(InvalidInstruction)?;
         Ok(match tag {
-            0 => Self::InitEscrow {
-                amount: Self::unpack_amount(rest)?,
-            },
-            1 => Self::Exchange {
-                amount: Self::unpack_amount(rest)?
-            },
+            0 => Self::InitEscrow {amount: Self::unpack_amount(rest)?,},
+            1 => Self::Exchange {amount: Self::unpack_amount(rest)?},
             _ => return Err(InvalidInstruction.into()),
         })
-        
+    }    
 
     fn unpack_amount(input: &[u8]) -> Result<u64, ProgramError> {
         let amount = input
